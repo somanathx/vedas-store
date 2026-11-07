@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Navbar from "./components/Navbar";
 import ProductCard from "./components/ProductCard";
+import CartView from "./components/CartView";
 import { products } from "./data/products";
 
 export default function App() {
@@ -9,12 +10,42 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState("All");
 
   const handleAddToCart = (product) => {
-    setCart((prevCart) => [...prevCart, product]);
+    setCart((prevCart) => {
+      const existing = prevCart.find((item) => item.id === product.id);
+      if (existing) {
+        return prevCart.map((item) =>
+          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+        );
+      }
+      return [...prevCart, { ...product, quantity: 1 }];
+    });
   };
+
+  const handleUpdateQuantity = (id, delta) => {
+    setCart((prevCart) =>
+      prevCart
+        .map((item) => {
+          if (item.id === id) {
+            const newQty = item.quantity + delta;
+            return newQty > 0 ? { ...item, quantity: newQty } : null;
+          }
+          return item;
+        })
+        .filter(Boolean)
+    );
+  };
+
+  const handleRemoveItem = (id) => {
+    setCart((prevCart) => prevCart.filter((item) => item.id !== id));
+  };
+
+  const handleClearCart = () => setCart([]);
 
   const filteredProducts = selectedCategory === "All"
     ? products
     : products.filter((p) => p.category === selectedCategory);
+
+  const cartTotalCount = cart.reduce((total, item) => total + item.quantity, 0);
 
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-slate-900 selection:text-white">
@@ -78,10 +109,12 @@ export default function App() {
         )}
 
         {activeTab === "cart" && (
-          <div className="max-w-2xl mx-auto text-center space-y-4 py-12">
-            <h2 className="text-2xl font-light">Your Shopping Bag</h2>
-            <p className="text-sm text-slate-500">Your bag is currently empty.</p>
-          </div>
+          <CartView 
+            cart={cart}
+            onUpdateQuantity={handleUpdateQuantity}
+            onRemoveItem={handleRemoveItem}
+            onClearCart={handleClearCart}
+          />
         )}
       </main>
     </div>
