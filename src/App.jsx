@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "./components/Navbar";
 import ProductCard from "./components/ProductCard";
 import CartView from "./components/CartView";
@@ -6,8 +6,17 @@ import { products } from "./data/products";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("shop");
-  const [cart, setCart] = useState([]);
+
+  const [cart, setCart] = useState(() => {
+    const savedCart = localStorage.getItem("vedas_cart");
+    return savedCart ? JSON.parse(savedCart) : [];
+  });
+
   const [selectedCategory, setSelectedCategory] = useState("All");
+
+  useEffect(() => {
+    localStorage.setItem("vedas_cart", JSON.stringify(cart));
+  }, [cart]);
 
   const handleAddToCart = (product) => {
     setCart((prevCart) => {
